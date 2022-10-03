@@ -1,6 +1,7 @@
 #!/usr/bin/bash
 
-source getAllSources-Terse.sh
+source utils/login.sh
+source ./getAllSources-Terse.sh
 
 SOURCE_NAME=my_source_name
 echo  "Name of source to retrieve details for?"
