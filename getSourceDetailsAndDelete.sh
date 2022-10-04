@@ -1,6 +1,5 @@
 #!/usr/bin/bash
 
-
 USERNAME=dremio
 PASSWORD=dremio123
 DREMIO_BASE_PATH=http://xps-15:9047
@@ -31,7 +30,6 @@ RESPONSE=$(curl -X GET -s -k -H 'Content-Type: application/json' -H "Authorizati
 echo $RESPONSE | jq .
 
 SOURCEID=$(echo $RESPONSE | jq -r ".id" )
-
 
 DELETE="no"
 read -p "Delete this source: $SOURCEID ? (yes/no) [$DELETE]: " DELETE
