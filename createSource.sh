@@ -2,7 +2,7 @@
 
 USERNAME=dremio
 PASSWORD=dremio123
-DREMIO_BASE_PATH=http://xps-15:9047
+DREMIO_BASE_PATH=http://localhost:9047
 
 read -p "Username [$USERNAME]? " name
 USERNAME=${name:-$USERNAME}
