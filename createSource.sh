@@ -23,8 +23,6 @@ read -p "[$SOURCE_DEFINITION]: " source_definition
 SOURCE_DEFINITION=${source_definition:-$SOURCE_DEFINITION}
 
 
-DREMIO_AUTH_TOKEN=_dremio$(curl $DREMIO_BASE_PATH/apiv2/login -k -H 'Content-Type: application/json' -d"{\"userName\":\"$USERNAME\",\"password\":\"$PASSWORD\"}" -s | jq -r ".token")
-
 curl -X POST   -k -H 'Content-Type: application/json' -H "Authorization: $DREMIO_AUTH_TOKEN"  $DREMIO_BASE_PATH/api/v3/source -d@$SOURCE_DEFINITION -v
 
 
