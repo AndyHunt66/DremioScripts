@@ -3,6 +3,7 @@
 USERNAME=dremio
 PASSWORD=dremio123
 DREMIO_BASE_PATH=http://localhost:9047
+SOURCE_DEFINITION=./data/CreateSource-MySQL.json
 
 read -p "Username [$USERNAME]? " name
 USERNAME=${name:-$USERNAME}
@@ -17,7 +18,6 @@ DREMIO_BASE_PATH=${base_path:-$DREMIO_BASE_PATH}
 DREMIO_AUTH_TOKEN=_dremio$(curl $DREMIO_BASE_PATH/apiv2/login -k -H 'Content-Type: application/json' -d"{\"userName\":\"$USERNAME\",\"password\":\"$PASSWORD\"}" -s | jq -r ".token")
 echo
 
-SOURCE_DEFINITION=./data/CreateSource-MySQL.json
 echo  "Source definition file"
 read -p "[$SOURCE_DEFINITION]: " source_definition
 SOURCE_DEFINITION=${source_definition:-$SOURCE_DEFINITION}
