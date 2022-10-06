@@ -1,5 +1,9 @@
 #!/usr/bin/bash
 
+echo "=== WARNING====="
+echo "This script uses the apiv2/jobs-listing/v1.0 which is undocumented and may be removed or changed in later versions of Drmeio "
+echo "================"
+
 USERNAME=dremio
 PASSWORD=dremio123
 DREMIO_BASE_PATH=http://localhost:9047
