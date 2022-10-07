@@ -1,5 +1,8 @@
 #!/usr/bin/bash
-# https://docs.dremio.com/software/rest-api/kvstore/
+
+echo "=== WARNING====="
+echo "This script uses the /api/v3/cluster/stats API which is undocumented and unsupported and may be removed or changed in later versions of Dremio "
+echo "================"
 
 USERNAME=dremio
 PASSWORD=dremio123
@@ -18,11 +21,5 @@ DREMIO_BASE_PATH=${base_path:-$DREMIO_BASE_PATH}
 DREMIO_AUTH_TOKEN=_dremio$(curl $DREMIO_BASE_PATH/apiv2/login -k -H 'Content-Type: application/json' -d"{\"userName\":\"$USERNAME\",\"password\":\"$PASSWORD\"}" -s | jq -r ".token")
 echo
 
-OUTPUT_FILE=kvStoreOut.zip
-read -p "Output File name [$OUTPUT_FILE] ? " output_file
-OUTPUT_FILE=${output_file:-$OUTPUT_FILE}
 
-RESPONSE=$(curl -X GET -s -w "%{http_code}"  -k -H 'Content-Type: application/json' -H "Authorization: $DREMIO_AUTH_TOKEN"  $DREMIO_BASE_PATH/apiv2/kvstore/report?store=none --output $OUTPUT_FILE )
-RESPONSECODE=${RESPONSE: -3}
-
-echo "HTTP Response code: $RESPONSECODE "
+curl -X GET -s -k -H 'Content-Type: application/json' -H "Authorization: $DREMIO_AUTH_TOKEN" $DREMIO_BASE_PATH/api/v3/cluster/stats?pretty
