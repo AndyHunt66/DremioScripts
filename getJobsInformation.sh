@@ -22,6 +22,7 @@ DREMIO_AUTH_TOKEN=_dremio$(curl $DREMIO_BASE_PATH/apiv2/login -k -H 'Content-Typ
 echo
 
 
+
 echo "Filter: Start time FROM  ?"
 read -p "(Value in epoch miliseconds): " filterStart
 
@@ -38,7 +39,6 @@ echo "Filter: User ?"
 read -p "e.g. <username1> <username2> : " filterUser
 
 echo "Filter: Queue ?"
-echo "Comma delimited list of queue names"
 read -p "e.g. Low Cost Reflections,High Cost User Queries  : " filterQueue
 
 SORTCOLUMN="st"
@@ -55,7 +55,11 @@ SORTORDER="DESCENDING"
 read -p "Order [$SORTORDER] : " sortOrder
 SORORDER="sort="${sortOrder:-$SORTORDER}
 
-#http://localhost:9047/apiv2/jobs-listing/v1.0?
+BATCHSIZE=100
+read -p "Batch size? [$BATCHSIZE]" batchSize
+BATCHSIZE=${batchSize:-$BATCHSIZE}
+
+#http://192.168.0.112:9047/apiv2/jobs-listing/v1.0?
 # detailLevel=1
 # &sort=st
 # &order=DESCENDING
@@ -67,14 +71,13 @@ SORORDER="sort="${sortOrder:-$SORTORDER}
 # %3B(qn%3D%3D%22Low+Cost+Reflections%22%2Cqn%3D%3D%22High+Cost+Reflections%22%2Cqn%3D%3D%22High+Cost+User+Queries%22%2Cqn%3D%3D%22Low+Cost+User+Queries%22%2Cqn%3D%3D%22UI+Previews%22)
 
 ## WARNING
-# 1   The filter has a non-consistent format
+# 1   The filter has a non-consistent, but consistently horrible format
 #   Note the %2C in each filter which is a URL-encoded comma.
 #   Some REST api apps (Postman, Insomnia) will un-encode this before sending, which breaks the request
 #
 # 2  Note all the double % sings, escaping the % in the shell
 
 FILTER=""
-
 #  Job Status filter:    (jst%3D%3D%22COMPLETED%22)
 #                 or:    (jst%3D%3D%22COMPLETED%22%2Cjst%3D%3D%22QUEUED%22)
 FILTER_STATUS=""
@@ -142,28 +145,35 @@ fi
 
 FILTER=${FILTER::-3}
 FILTER="filter="${FILTER}
-
-URL=$DREMIO_BASE_PATH"/apiv2/jobs-listing/v1.0?"${SORT}"&"${ORDER}"&"${FILTER}
-
-
-echo $URL
-
-RESPONSE=$(curl -X GET -s  -k -H 'Content-Type: application/json' -H "Authorization: $DREMIO_AUTH_TOKEN"  $URL)
-
-# WARNING - $RESPONSE must be put in double-quotes here, otherwise we get variable expansion in the shell, and in something like
-#   select * from vds1
-#  the * is expanded to a directory listing of the current directory
-echo "$RESPONSE" | jq .
+URI="/apiv2/jobs-listing/v1.0?"${SORT}"&"${ORDER}"&"${FILTER}"&offset=0&limit="${BATCHSIZE}
 
 
-readarray -t joblist < <(echo $RESPONSE | jq  -r ' .jobs[].id ' )
-readarray -t statuslist < <(echo $RESPONSE | jq  -r ' .jobs[].state ' )
-readarray -t querytypelist < <(echo $RESPONSE | jq  -r ' .jobs[].queryType ' )
 
-echo "========================"
-for i in ${!joblist[@]}; do
-  printf " %-3s - %-20s - %-20s - %-20s \n" $i ${joblist[$i]} ${querytypelist[$i]} ${statuslist[$i]}
+
+while [[ $URI != "null" ]]
+do
+
+  URL=$DREMIO_BASE_PATH$URI
+#  echo $URL
+#  read -p "continue"
+
+  RESPONSE=$(curl -X GET -s  -k -H 'Content-Type: application/json' -H "Authorization: $DREMIO_AUTH_TOKEN"  $URL)
+
+  # WARNING - $RESPONSE must be put in double-quotes here, otherwise we get variable expansion in the shell, and in something like
+  #   select * from vds1
+  #  the * is expanded to a directory listing of the current directory
+  # echo "$RESPONSE" | jq .
+  readarray -t joblist < <(echo $RESPONSE | jq  -r ' .jobs[].id ' )
+  readarray -t statuslist < <(echo $RESPONSE | jq  -r ' .jobs[].state ' )
+  readarray -t querytypelist < <(echo $RESPONSE | jq  -r ' .jobs[].queryType ' )
+
+#  echo "========================"
+  for i in ${!joblist[@]}; do
+#    printf " %-3s - %-20s - %-20s - %-20s \n" $i ${joblist[$i]} ${querytypelist[$i]} ${statuslist[$i]}
+    printf "%-20s - %-20s - %-20s \n" ${joblist[$i]} ${querytypelist[$i]} ${statuslist[$i]}
+  done
+#  echo "========================"
+
+  URI=$(echo $RESPONSE | jq -r '.next')
+
 done
-echo "========================"
-
-
